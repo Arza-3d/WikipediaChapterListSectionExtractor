@@ -49,15 +49,17 @@
                         currentChapter.push(trimmed);
                     }
                 } 
-                // Fixed regex to handle varying spaces
-                else if (/^\| ChapterList\s*=/.test(trimmed)) {
+                // New detection logic
+                else if (trimmed.startsWith('|') && trimmed.toLowerCase().includes('chapterlist')) {
                     inChapterList = true;
-                    const content = trimmed.split('=').slice(1).join('=').trim();
+                    // Split at first equals sign and capture content
+                    const parts = trimmed.split('=');
+                    const content = parts.slice(1).join('=').trim();
                     if (content) currentChapter.push(content);
                 }
             });
 
-            // Add any remaining chapter content
+            // Add remaining chapter content
             if (currentChapter.length > 0) {
                 chapters.push(currentChapter.join('\n'));
             }
