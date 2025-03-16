@@ -38,26 +38,35 @@
                 const trimmed = line.trim();
                 
                 if (inChapterList) {
+                    // Check if line starts with pipe but isn't a new ChapterList
                     if (trimmed.startsWith('|')) {
-                        // End of ChapterList section
-                        inChapterList = false;
-                        if (currentChapter.length > 0) {
+                        if (/ChapterList/i.test(trimmed)) {
+                            // End current chapter and start new one
+                            chapters.push(currentChapter.join('\n'));
+                            currentChapter = [];
+                            // Process new ChapterList line
+                            const content = trimmed.split('=').slice(1).join('=').trim();
+                            if (content) currentChapter.push(content);
+                        } else {
+                            // Regular parameter line - end capture
+                            inChapterList = false;
                             chapters.push(currentChapter.join('\n'));
                             currentChapter = [];
                         }
-                    } else if (trimmed) {
-                        currentChapter.push(trimmed);
+                    } else {
+                        // Chapter content line
+                        if (trimmed) currentChapter.push(trimmed);
                     }
                 } 
-                // Updated regex to match ChapterList with any suffix
-                else if (/^\|\s*ChapterList\w*\s*=/i.test(trimmed)) {
+                // Check for new ChapterList parameter
+                else if (/^\|.*ChapterList/i.test(trimmed)) {
                     inChapterList = true;
                     const content = trimmed.split('=').slice(1).join('=').trim();
                     if (content) currentChapter.push(content);
                 }
             });
 
-            // Add remaining chapter content
+            // Add final chapter
             if (currentChapter.length > 0) {
                 chapters.push(currentChapter.join('\n'));
             }
