@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ChapterList Extractor</title>
+    <style>
+        .container {
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Input Wikipedia Text:</h2>
+        <textarea id="input"></textarea>
+        <button onclick="process()">Extract ChapterList</button>
+        <h2>Output:</h2>
+        <textarea id="output" readonly></textarea>
+        <button onclick="copyOutput()">Copy Output</button>
+    </div>
+    <script>
+        function process() {
+            const inputText = document.getElementById('input').value;
+            const blockRegex = /\{\{Graphic novel list\b.*?\}\}/gs;
+            const blocks = inputText.match(blockRegex) || [];
+            let outputContent = '';
+
+            blocks.forEach(block => {
+                const lines = block.split('\n');
+                let inChapterList = false;
+                let chapterLines = [];
+
+                lines.forEach(line => {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('| ChapterList =')) {
+                        inChapterList = true;
+                        const contentPart = trimmedLine.split('=').slice(1).join('=').trim();
+                        if (contentPart) {
+                            chapterLines.push(contentPart);
+                        }
+                    } else if (inChapterList) {
+                        if (trimmedLine.startsWith('|')) {
+                            inChapterList = false;
+                        } else if (trimmedLine.startsWith('*')) {
+                            chapterLines.push(trimmedLine);
+                        }
+                    }
+                });
+
+                if (chapterLines.length > 0) {
+                    outputContent += chapterLines.join('\n') + '\n\n';
+                }
+            });
+
+            document.getElementById('output').value = outputContent.trim();
+        }
+
+        function copyOutput() {
+            const outputTextarea = document.getElementById('output');
+            outputTextarea.select();
+            document.execCommand('copy');
+        }
+    </script>
+</body>
+</html>
