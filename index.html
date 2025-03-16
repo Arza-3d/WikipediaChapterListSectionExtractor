@@ -49,12 +49,10 @@
                         currentChapter.push(trimmed);
                     }
                 } 
-                // New detection logic
-                else if (trimmed.startsWith('|') && trimmed.toLowerCase().includes('chapterlist')) {
+                // Updated regex to match ChapterList with any suffix
+                else if (/^\|\s*ChapterList\w*\s*=/i.test(trimmed)) {
                     inChapterList = true;
-                    // Split at first equals sign and capture content
-                    const parts = trimmed.split('=');
-                    const content = parts.slice(1).join('=').trim();
+                    const content = trimmed.split('=').slice(1).join('=').trim();
                     if (content) currentChapter.push(content);
                 }
             });
