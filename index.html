@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Auto ChapterList Extractor</title>
+    <title>ChapterList Extractor</title>
     <style>
         .container { margin: 20px; }
         textarea { 
@@ -10,8 +10,7 @@
             margin: 10px 0; 
             padding: 10px;
             box-sizing: border-box;
-            border-width: 1px;
-            border-color: black;
+            font-family: monospace;
         }
         button { padding: 10px 20px; margin: 5px; }
     </style>
@@ -26,13 +25,13 @@
     </div>
 
     <script>
-        // Automatic processing when input changes
         document.getElementById('input').addEventListener('input', process);
         
         function process() {
             const inputText = document.getElementById('input').value;
             const lines = inputText.split('\n');
-            let outputContent = [];
+            let chapters = [];
+            let currentChapter = [];
             let inChapterList = false;
 
             lines.forEach(line => {
@@ -40,21 +39,30 @@
                 
                 if (inChapterList) {
                     if (trimmed.startsWith('|')) {
+                        // End of ChapterList section
                         inChapterList = false;
+                        if (currentChapter.length > 0) {
+                            chapters.push(currentChapter.join('\n'));
+                            currentChapter = [];
+                        }
                     } else if (trimmed) {
-                        outputContent.push(trimmed);
+                        currentChapter.push(trimmed);
                     }
-                }
-                else if (trimmed.startsWith('| ChapterList =')) {
+                } 
+                // Fixed regex to handle varying spaces
+                else if (/^\| ChapterList\s*=/.test(trimmed)) {
                     inChapterList = true;
                     const content = trimmed.split('=').slice(1).join('=').trim();
-                    if (content) outputContent.push(content);
+                    if (content) currentChapter.push(content);
                 }
             });
 
-            // Add spacing between different volume sections
-            const formattedOutput = outputContent.join('\n').replace(/(\n\*)/g, '\n\n$1');
-            document.getElementById('output').value = formattedOutput.trim();
+            // Add any remaining chapter content
+            if (currentChapter.length > 0) {
+                chapters.push(currentChapter.join('\n'));
+            }
+
+            document.getElementById('output').value = chapters.join('\n\n');
         }
 
         function copyOutput() {
