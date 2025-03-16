@@ -3,18 +3,9 @@
 <head>
     <title>ChapterList Extractor</title>
     <style>
-        .container {
-            margin: 20px;
-        }
-        textarea {
-            width: 100%;
-            height: 300px;
-            margin: 10px 0;
-        }
-        button {
-            padding: 10px;
-            margin: 5px;
-        }
+        .container { margin: 20px; }
+        textarea { width: 100%; height: 300px; margin: 10px 0; }
+        button { padding: 10px; margin: 5px; }
     </style>
 </head>
 <body>
@@ -26,46 +17,47 @@
         <textarea id="output" readonly></textarea>
         <button onclick="copyOutput()">Copy Output</button>
     </div>
+
     <script>
         function process() {
             const inputText = document.getElementById('input').value;
-            const blockRegex = /\{\{Graphic novel list\b.*?\}\}/gs;
-            const blocks = inputText.match(blockRegex) || [];
+            const lines = inputText.split('\n');
             let outputContent = '';
+            let inChapterList = false;
+            let currentChapter = [];
 
-            blocks.forEach(block => {
-                const lines = block.split('\n');
-                let inChapterList = false;
-                let chapterLines = [];
-
-                lines.forEach(line => {
-                    const trimmedLine = line.trim();
-                    if (trimmedLine.startsWith('| ChapterList =')) {
-                        inChapterList = true;
-                        const contentPart = trimmedLine.split('=').slice(1).join('=').trim();
-                        if (contentPart) {
-                            chapterLines.push(contentPart);
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                
+                if (inChapterList) {
+                    if (trimmed.startsWith('|')) {
+                        // End of ChapterList section
+                        inChapterList = false;
+                        if (currentChapter.length > 0) {
+                            outputContent += currentChapter.join('\n') + '\n\n';
+                            currentChapter = [];
                         }
-                    } else if (inChapterList) {
-                        if (trimmedLine.startsWith('|')) {
-                            inChapterList = false;
-                        } else if (trimmedLine.startsWith('*')) {
-                            chapterLines.push(trimmedLine);
-                        }
+                    } else {
+                        currentChapter.push(trimmed);
                     }
-                });
-
-                if (chapterLines.length > 0) {
-                    outputContent += chapterLines.join('\n') + '\n\n';
+                } else if (trimmed.startsWith('| ChapterList =')) {
+                    inChapterList = true;
+                    const content = trimmed.split('=').slice(1).join('=').trim();
+                    if (content) currentChapter.push(content);
                 }
             });
+
+            // Add any remaining chapter content
+            if (currentChapter.length > 0) {
+                outputContent += currentChapter.join('\n');
+            }
 
             document.getElementById('output').value = outputContent.trim();
         }
 
         function copyOutput() {
-            const outputTextarea = document.getElementById('output');
-            outputTextarea.select();
+            const output = document.getElementById('output');
+            output.select();
             document.execCommand('copy');
         }
     </script>
