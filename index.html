@@ -1,58 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ChapterList Extractor</title>
+    <title>Auto ChapterList Extractor</title>
     <style>
         .container { margin: 20px; }
-        textarea { width: 100%; height: 300px; margin: 10px 0; }
-        button { padding: 10px; margin: 5px; }
+        textarea { 
+            width: 100%; 
+            height: 300px; 
+            margin: 10px 0; 
+            padding: 10px;
+            box-sizing: border-box;
+            border-width: 1px;
+            border-color: black;
+        }
+        button { padding: 10px 20px; margin: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Input Wikipedia Text:</h2>
-        <textarea id="input"></textarea>
-        <button onclick="process()">Extract ChapterList</button>
-        <h2>Output:</h2>
+        <textarea id="input" placeholder="Paste your text here..."></textarea>
+        <h2>Extracted ChapterList:</h2>
         <textarea id="output" readonly></textarea>
         <button onclick="copyOutput()">Copy Output</button>
     </div>
 
     <script>
+        // Automatic processing when input changes
+        document.getElementById('input').addEventListener('input', process);
+        
         function process() {
             const inputText = document.getElementById('input').value;
             const lines = inputText.split('\n');
-            let outputContent = '';
+            let outputContent = [];
             let inChapterList = false;
-            let currentChapter = [];
 
             lines.forEach(line => {
                 const trimmed = line.trim();
                 
                 if (inChapterList) {
                     if (trimmed.startsWith('|')) {
-                        // End of ChapterList section
                         inChapterList = false;
-                        if (currentChapter.length > 0) {
-                            outputContent += currentChapter.join('\n') + '\n\n';
-                            currentChapter = [];
-                        }
-                    } else {
-                        currentChapter.push(trimmed);
+                    } else if (trimmed) {
+                        outputContent.push(trimmed);
                     }
-                } else if (trimmed.startsWith('| ChapterList =')) {
+                }
+                else if (trimmed.startsWith('| ChapterList =')) {
                     inChapterList = true;
                     const content = trimmed.split('=').slice(1).join('=').trim();
-                    if (content) currentChapter.push(content);
+                    if (content) outputContent.push(content);
                 }
             });
 
-            // Add any remaining chapter content
-            if (currentChapter.length > 0) {
-                outputContent += currentChapter.join('\n');
-            }
-
-            document.getElementById('output').value = outputContent.trim();
+            // Add spacing between different volume sections
+            const formattedOutput = outputContent.join('\n').replace(/(\n\*)/g, '\n\n$1');
+            document.getElementById('output').value = formattedOutput.trim();
         }
 
         function copyOutput() {
